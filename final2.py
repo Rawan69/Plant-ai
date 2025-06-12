@@ -9,17 +9,17 @@ from rembg import remove
 from PIL import Image
 import joblib
 
-# Get base directory (folder where final.py is)
-BASE_DIR = os.path.dirname(os.path.abspath(_file_))
+# المسار الأساسي للملف
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Load models
+# تحميل النماذج
 yolo_model = YOLO(os.path.join(BASE_DIR, "model_files", "best.pt"))
 classifier_model = tf.keras.models.load_model(os.path.join(BASE_DIR, "model_files", "final_model_to_identify_plants.keras"))
 
-# Class names
+# أسماء النباتات
 class_names = ['apple', 'cherry', 'grapes', 'peach', 'pepper', 'potato', 'strawberry', 'tomato']
 
-# Resize and center image on white background
+# تغيير حجم الصورة مع خلفية بيضاء
 def resize_with_background(image, size=(224, 224), background_color=(255, 255, 255)):
     image_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     image_pil.thumbnail(size, Image.Resampling.LANCZOS)
@@ -29,7 +29,7 @@ def resize_with_background(image, size=(224, 224), background_color=(255, 255, 2
     background.paste(image_pil, (x, y))
     return cv2.cvtColor(np.array(background), cv2.COLOR_BGR2RGB)
 
-# Apply CLAHE to image
+# تحسين الإضاءة
 def apply_clahe(image):
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
@@ -38,7 +38,7 @@ def apply_clahe(image):
     lab_clahe = cv2.merge((l_clahe, a, b))
     return cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2BGR)
 
-# Segment leaf using GrabCut
+# تقطيع الورقة
 def segment_leaf(image):
     image = cv2.resize(image, (512, 512))
     image = apply_clahe(image)
@@ -50,7 +50,7 @@ def segment_leaf(image):
     mask = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
     return image * mask[:, :, np.newaxis]
 
-# Feature extraction
+# استخراج الخصائص
 def extract_color_histogram(image):
     image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     features = []
@@ -86,7 +86,7 @@ def combine_features(image):
         extract_lbp_texture(image)
     ])
 
-# Disease prediction
+# التنبؤ بالمرض
 def predict_disease_with_svm(cropped_image, plant_type):
     bundle_dir = os.path.join(BASE_DIR, "bundles")
     bundle_path = os.path.join(bundle_dir, f"{plant_type}_bundle.pkl")
@@ -100,9 +100,9 @@ def predict_disease_with_svm(cropped_image, plant_type):
     features_pca = pca.transform(features_scaled)
     return label_map[svm.predict(features_pca)[0]]
 
-# ------------------------- Flask API -------------------------
+# ---------------------- Flask API ----------------------
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -160,5 +160,5 @@ def predict():
 
     return jsonify({"error": "No plant detected", "plant_predictions": [], "disease": "unknown"}), 200
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     app.run(port=5000, debug=True)
