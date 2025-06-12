@@ -18,3 +18,4 @@ EXPOSE 5000
 # نحدد الأمر اللي يشغّل السيرفر
 CMD ["python", "final2.py"]
 
+RUN apt-get update && apt-get install -y python3-distutils
