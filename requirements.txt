@@ -1,0 +1,11 @@
+Flask
+gunicorn
+tensorflow==2.15.0
+opencv-python-headless
+numpy
+Pillow
+ultralytics
+rembg
+scikit-learn
+scikit-image
+joblib
