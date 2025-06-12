@@ -8,9 +8,12 @@ WORKDIR /app
 COPY requirements.txt .
 COPY final2.py .
 
-# نثبّت المكتبات المطلوبة
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# نثبت distutils والأدوات الأساسية
+RUN apt-get update && apt-get install -y python3-distutils && \
+    pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    rm -rf /root/.cache/pip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # نفتح البورت اللي Flask بيشتغل عليه (عادة 5000)
 EXPOSE 5000
@@ -18,4 +21,3 @@ EXPOSE 5000
 # نحدد الأمر اللي يشغّل السيرفر
 CMD ["python", "final2.py"]
 
-RUN apt-get update && apt-get install -y python3-distutils
